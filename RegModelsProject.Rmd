@@ -1,0 +1,124 @@
+---
+title: "Regression Models Final Project"
+author: "Fernando Gonzalez Prada"
+date: "21 de agosto de 2015"
+output: html_document
+---
+
+***"Is an automatic or manual transmission better for MPG?"***
+
+***"Quantify the MPG difference between automatic and manual transmissions?"***
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models).
+
+A data frame with 32 observations on 11 variables.  
+
+
+* **mpg:** Miles/(US) gallon
+* **cyl:** Number of cylinders
+* **disp:** Displacement (cu.in.)
+* **hp:** Gross horsepower
+* **drat:** Rear axle ratio
+* **wt:** Weight (lb/1000)
+* **qsec:** 1/4 mile time
+* **vs:** V/S
+* **am:** Transmission (0 = automatic, 1 = manual)
+* **gear:** Number of forward gears
+* **carb:** Number of carburetors 
+
+
+Open the data
+```{r Loading the data}
+suppressMessages(library(datasets))
+suppressMessages(library(pastecs))
+suppressMessages(library(ggplot2))
+
+df <- mtcars
+df$am <- factor(df$am, labels = c("Automatic", "Manual"))
+summary(df)
+```
+
+**Simple Linear Regression Model**
+```{r simple model}
+simple <- lm(mpg ~ am, data = df)
+summary(simple)
+```
+
+**Multiple Linear Regression Model and Stepwise**
+```{r step1}
+multi1 <- step(
+                lm(mpg ~ ., data = df)
+                    , trace = 0, steps = 10000, direction = "both");
+summary(multi1)
+```
+
+
+**Scale and Center the numeric variables**
+
+```{r center and scale}
+
+df$mpg = scale(df$mpg, center = TRUE, scale = TRUE)
+df$disp = scale(df$disp, center = TRUE, scale = TRUE)
+df$hp = scale(df$hp, center = TRUE, scale = TRUE)
+df$drat = scale(df$drat, center = TRUE, scale = TRUE)
+df$wt = scale(df$wt, center = TRUE, scale = TRUE)
+df$qsec = scale(df$qsec, center = TRUE, scale = TRUE)
+df$vs = scale(df$vs, center = TRUE, scale = TRUE)
+df$gear = scale(df$gear, center = TRUE, scale = TRUE)
+df$carb = scale(df$carb, center = TRUE, scale = TRUE)
+# summary(df)
+```
+
+**Multiple Linear Regression Model and Stepwise, with centered and scaled variables**
+```{r multi2}
+multi2 <- step(
+                lm(mpg ~ ., data = df)
+                    , trace = 0, steps = 10000, direction = "both");
+summary(multi2)
+```
+
+**Anova Analisys
+```{r Anova}
+anova(simple, multi1, multi2)
+```
+
+
+** Apendix
+
+**Checking for normality:**
+
+*Perform Shapiro Test*
+ 
+```{r Shapiro}
+round(
+    stat.desc(
+        df[, c("mpg", "disp", "hp", "drat", "wt", "qsec", "vs", "gear", "carb")],
+        basic = FALSE, norm = TRUE, desc=FALSE)
+    ,digits = 3)
+```
+Observing the values of the "normtest.W" row, most of the variables have values close to 1, which is an indicator the the data is nearly normally distributed.
+
+
+*The quantile plots also show that the columns have normal distribution:*
+
+```{r Qplots, echo=FALSE}
+
+qqplot.mpg <- qplot(sample = df$mpg, stat="qq") + labs(x = "mpg")
+qqplot.mpg
+qqplot.disp <- qplot(sample = df$disp, stat="qq") + labs(x = "disp")
+qqplot.disp
+qqplot.hp <- qplot(sample = df$hp, stat="qq") + labs(x = "hp")
+qqplot.hp
+qqplot.drat <- qplot(sample = df$drat, stat="qq") + labs(x = "drat")
+qqplot.drat
+qqplot.wt <- qplot(sample = df$wt, stat="qq") + labs(x = "wt")
+qqplot.wt
+qqplot.qsec <- qplot(sample = df$qsec, stat="qq") + labs(x = "qsec")
+qqplot.qsec
+qqplot.gear <- qplot(sample = df$gear, stat="qq") + labs(x = "gear")
+qqplot.gear
+qqplot.carb <- qplot(sample = df$carb, stat="qq") + labs(x = "carb")
+qqplot.carb
+```
+
+
