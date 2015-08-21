@@ -27,7 +27,7 @@ A data frame with 32 observations on 11 variables.
 * **carb:** Number of carburetors 
 
 
-Open the data
+Open the data and observe the summary
 ```{r Loading the data}
 suppressMessages(library(datasets))
 suppressMessages(library(pastecs))
@@ -37,6 +37,9 @@ df <- mtcars
 df$am <- factor(df$am, labels = c("Automatic", "Manual"))
 summary(df)
 ```
+
+The are not missing values neither outliers. The data seems to follow a normal distribution. See Appendix 1 for the details.
+
 
 **Simple Linear Regression Model**
 ```{r simple model}
@@ -77,15 +80,16 @@ multi2 <- step(
 summary(multi2)
 ```
 
-**Anova Analisys
+**Anova Analisys**
 ```{r Anova}
 anova(simple, multi1, multi2)
 ```
 
 
-** Apendix
+**Appendix 1**
 
 **Checking for normality:**
+
 
 *Perform Shapiro Test*
  
