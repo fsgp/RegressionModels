@@ -2,17 +2,18 @@
 title: "Regression Models Final Project"
 author: "Fernando Gonzalez Prada"
 date: "21 de agosto de 2015"
-output: html_document
+output: pdf_document
 ---
 
-***"Is an automatic or manual transmission better for MPG?"***
+Motor Trend is a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
 
-***"Quantify the MPG difference between automatic and manual transmissions?"***
+***Is an automatic or manual transmission better for MPG?***
+
+***Quantify the MPG difference between automatic and manual transmissions?***
 
 The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models).
 
 A data frame with 32 observations on 11 variables.  
-
 
 * **mpg:** Miles/(US) gallon
 * **cyl:** Number of cylinders
@@ -27,69 +28,86 @@ A data frame with 32 observations on 11 variables.
 * **carb:** Number of carburetors 
 
 
-Open the data and observe the summary
+The first step is loading the data and performing an Exploratory Data Analysis
 ```{r Loading the data}
 suppressMessages(library(datasets))
 suppressMessages(library(pastecs))
 suppressMessages(library(ggplot2))
+suppressMessages(library(car))
 
 df <- mtcars
 df$am <- factor(df$am, labels = c("Automatic", "Manual"))
-summary(df)
 ```
 
-The are not missing values neither outliers. The data seems to follow a normal distribution. See Appendix 1 for the details.
+The data is pretty clean. No missing values neither outliers are present. The data follows a nearly normal distribution. 
 
+But, for the numeric variables, "disp" and "hp" the range of values is much wider than for the other variables. So, before fitting the models, we must center and scale the variables.
 
-**Simple Linear Regression Model**
-```{r simple model}
-simple <- lm(mpg ~ am, data = df)
-summary(simple)
-```
-
-**Multiple Linear Regression Model and Stepwise**
-```{r step1}
-multi1 <- step(
-                lm(mpg ~ ., data = df)
-                    , trace = 0, steps = 10000, direction = "both");
-summary(multi1)
-```
-
+See the Appendix for the details.
 
 **Scale and Center the numeric variables**
 
 ```{r center and scale}
-
-df$mpg = scale(df$mpg, center = TRUE, scale = TRUE)
-df$disp = scale(df$disp, center = TRUE, scale = TRUE)
-df$hp = scale(df$hp, center = TRUE, scale = TRUE)
-df$drat = scale(df$drat, center = TRUE, scale = TRUE)
-df$wt = scale(df$wt, center = TRUE, scale = TRUE)
-df$qsec = scale(df$qsec, center = TRUE, scale = TRUE)
-df$vs = scale(df$vs, center = TRUE, scale = TRUE)
-df$gear = scale(df$gear, center = TRUE, scale = TRUE)
-df$carb = scale(df$carb, center = TRUE, scale = TRUE)
-# summary(df)
+df2 = df
+df2$mpg = scale(df2$mpg, center = TRUE, scale = TRUE)
+df2$disp = scale(df2$disp, center = TRUE, scale = TRUE)
+df2$hp = scale(df2$hp, center = TRUE, scale = TRUE)
+df2$drat = scale(df2$drat, center = TRUE, scale = TRUE)
+df2$wt = scale(df2$wt, center = TRUE, scale = TRUE)
+df2$qsec = scale(df2$qsec, center = TRUE, scale = TRUE)
+df2$vs = scale(df2$vs, center = TRUE, scale = TRUE)
+df2$gear = scale(df2$gear, center = TRUE, scale = TRUE)
+df2$carb = scale(df2$carb, center = TRUE, scale = TRUE)
 ```
 
-**Multiple Linear Regression Model and Stepwise, with centered and scaled variables**
-```{r multi2}
-multi2 <- step(
-                lm(mpg ~ ., data = df)
+
+**Simple Linear Regression Model**
+```{r simple model}
+simple <- lm(mpg ~ am, data = df2)
+summary(simple)$coefficients
+summary(simple)$r.squared
+```
+
+If we only analize the relationship between "mpg" and "am", the model says that **with manual transmition, we have 1.2 more milles per galllon**. However, we need to take into account the other variables. 
+The R squared is only 0.3598, which explains only 36% of the variance, quite poor.
+
+So, the next step is to perform Multiple Linear Regression, using Stepwise to obtain the best combination of vairables.
+
+
+**Multiple Linear Regression Model and Stepwise**
+```{r step1}
+multi <- step(
+                lm(mpg ~ ., data = df2)
                     , trace = 0, steps = 10000, direction = "both");
-summary(multi2)
+summary(multi)$coefficients
+summary(multi)$r.squared
 ```
+With this second model, 
+
+R squared 0.8497
+amManual      0.4871184
+wt           -0.6358330
+qsec         0.3634657
+
 
 **Anova Analisys**
 ```{r Anova}
-anova(simple, multi1, multi2)
+anova(simple, multi)
 ```
 
 
-**Appendix 1**
+**Appendix**
+
+Summary Statistics before centering and scaling the variables
+```{r summary}
+summary(df)
+```
+Summary Statistics after centering and scaling the variables
+```{r summary2}
+summary(df2)
+```
 
 **Checking for normality:**
-
 
 *Perform Shapiro Test*
  
@@ -103,26 +121,13 @@ round(
 Observing the values of the "normtest.W" row, most of the variables have values close to 1, which is an indicator the the data is nearly normally distributed.
 
 
-*The quantile plots also show that the columns have normal distribution:*
-
-```{r Qplots, echo=FALSE}
-
-qqplot.mpg <- qplot(sample = df$mpg, stat="qq") + labs(x = "mpg")
-qqplot.mpg
-qqplot.disp <- qplot(sample = df$disp, stat="qq") + labs(x = "disp")
-qqplot.disp
-qqplot.hp <- qplot(sample = df$hp, stat="qq") + labs(x = "hp")
-qqplot.hp
-qqplot.drat <- qplot(sample = df$drat, stat="qq") + labs(x = "drat")
-qqplot.drat
-qqplot.wt <- qplot(sample = df$wt, stat="qq") + labs(x = "wt")
-qqplot.wt
-qqplot.qsec <- qplot(sample = df$qsec, stat="qq") + labs(x = "qsec")
-qqplot.qsec
-qqplot.gear <- qplot(sample = df$gear, stat="qq") + labs(x = "gear")
-qqplot.gear
-qqplot.carb <- qplot(sample = df$carb, stat="qq") + labs(x = "carb")
-qqplot.carb
+*Bivariate relationship among the variables:*
+```{r scatterplotMatrix}
+scatterplotMatrix(~mpg+disp+drat+wt+hp, data=df, spread=FALSE, smoother.args=list(lty=2))
 ```
 
-
+**Residuals**
+```{r residuals}
+par(mfrow=c(2,2),mar=c(2,2,2,2))
+plot(multi)
+```
